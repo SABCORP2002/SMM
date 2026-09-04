@@ -54,15 +54,19 @@ export type TransactionType = (typeof TRANSACTION_TYPES)[number];
 export const USER_ROLES = ["user", "admin", "support"] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
-/** Plateformes prises en charge, avec le vocabulaire local. */
+/**
+ * Plateformes prises en charge, avec le vocabulaire local.
+ * `icon` pointe vers un SVG de /public (icône réelle) ; sans fichier
+ * disponible, `emoji` sert de repli (Telegram, X pour l'instant).
+ */
 export const PLATFORMS = [
-  { key: "tiktok", label: "TikTok", emoji: "🎵" },
-  { key: "instagram", label: "Instagram", emoji: "📸" },
-  { key: "facebook", label: "Facebook", emoji: "👍" },
-  { key: "whatsapp", label: "WhatsApp", emoji: "💬" },
-  { key: "youtube", label: "YouTube", emoji: "▶️" },
-  { key: "telegram", label: "Telegram", emoji: "✈️" },
-  { key: "twitter", label: "X (Twitter)", emoji: "𝕏" },
+  { key: "tiktok", label: "TikTok", emoji: "🎵", icon: "/logo-tiktok.svg" },
+  { key: "instagram", label: "Instagram", emoji: "📸", icon: "/logo-instagram.svg" },
+  { key: "facebook", label: "Facebook", emoji: "👍", icon: "/logo-facebook.svg" },
+  { key: "whatsapp", label: "WhatsApp", emoji: "💬", icon: "/logo-whatsapp.svg" },
+  { key: "youtube", label: "YouTube", emoji: "▶️", icon: "/logo-youtube.svg" },
+  { key: "telegram", label: "Telegram", emoji: "✈️", icon: "/telegram.svg" },
+  { key: "twitter", label: "X (Twitter)", emoji: "𝕏", icon: null },
 ] as const;
 export type PlatformKey = (typeof PLATFORMS)[number]["key"];
 

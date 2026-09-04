@@ -1,15 +1,26 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { PlatformIcon } from "@/components/brand/platform-icon";
 import { siteConfig } from "@/config/site";
 import { fr } from "@/i18n/fr";
+import { PLATFORMS } from "@/lib/constants";
 
-const serviceLinks = [
-  { label: "TikTok", href: "/services?plateforme=tiktok" },
-  { label: "Instagram", href: "/services?plateforme=instagram" },
-  { label: "Facebook", href: "/services?plateforme=facebook" },
-  { label: "YouTube", href: "/services?plateforme=youtube" },
-  { label: "WhatsApp", href: "/services?plateforme=whatsapp" },
-];
+const FOOTER_PLATFORM_KEYS = [
+  "tiktok",
+  "instagram",
+  "facebook",
+  "youtube",
+  "whatsapp",
+] as const;
+
+const serviceLinks = FOOTER_PLATFORM_KEYS.map((key) => {
+  const platform = PLATFORMS.find((p) => p.key === key)!;
+  return {
+    label: platform.label,
+    href: `/services?plateforme=${platform.key}`,
+    platform,
+  };
+});
 
 const companyLinks = [
   { label: "Comment ça marche", href: "/comment-ca-marche" },
@@ -64,7 +75,11 @@ function FooterColumn({
   links,
 }: {
   title: string;
-  links: { label: string; href: string }[];
+  links: {
+    label: string;
+    href: string;
+    platform?: (typeof PLATFORMS)[number];
+  }[];
 }) {
   return (
     <div>
@@ -74,8 +89,9 @@ function FooterColumn({
           <li key={l.href}>
             <Link
               href={l.href}
-              className="text-sm text-muted transition-colors hover:text-ink-900"
+              className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-ink-900"
             >
+              {l.platform && <PlatformIcon platform={l.platform} size={15} />}
               {l.label}
             </Link>
           </li>

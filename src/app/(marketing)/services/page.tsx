@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCatalog } from "@/db/queries";
 import { PageHeader } from "@/components/ui/page-header";
 import { ButtonLink } from "@/components/ui/button";
+import { PlatformIcon } from "@/components/brand/platform-icon";
 import { PLATFORMS } from "@/lib/constants";
 import { formatMoney } from "@/lib/utils";
 
@@ -157,7 +158,11 @@ function PlatformFilter({ active }: { active?: string }) {
               : "border-border bg-white text-ink-600 hover:border-brand-300"
           }`}
         >
-          <span aria-hidden>{p.emoji}</span>
+          <PlatformIcon
+            platform={p}
+            size={16}
+            className={active === p.key ? "brightness-0 invert" : ""}
+          />
           {p.label}
         </Link>
       ))}

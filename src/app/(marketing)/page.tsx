@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
+import { PlatformIcon } from "@/components/brand/platform-icon";
 import { PLATFORMS } from "@/lib/constants";
 import { fr } from "@/i18n/fr";
 
@@ -158,8 +159,8 @@ function Platforms() {
             href={`/services?plateforme=${p.key}`}
             className="group flex items-center gap-3 rounded-2xl border border-border bg-white p-4 transition-colors hover:border-brand-300 hover:bg-brand-50"
           >
-            <span className="grid size-11 place-items-center rounded-xl bg-surface text-2xl">
-              {p.emoji}
+            <span className="grid size-11 place-items-center rounded-xl bg-surface">
+              <PlatformIcon platform={p} size={22} />
             </span>
             <span className="font-semibold text-ink-900">{p.label}</span>
           </Link>
