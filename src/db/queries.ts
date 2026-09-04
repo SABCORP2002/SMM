@@ -128,6 +128,27 @@ export async function getUserDashboard(userId: string) {
   };
 }
 
+export async function getUserOrders(userId: string, limit = 50) {
+  return db
+    .select({
+      id: orders.id,
+      link: orders.link,
+      quantity: orders.quantity,
+      charge: orders.charge,
+      status: orders.status,
+      startCount: orders.startCount,
+      remains: orders.remains,
+      createdAt: orders.createdAt,
+      serviceName: services.name,
+      platform: services.platform,
+    })
+    .from(orders)
+    .innerJoin(services, eq(orders.serviceId, services.id))
+    .where(eq(orders.userId, userId))
+    .orderBy(desc(orders.createdAt))
+    .limit(limit);
+}
+
 export async function getReferralInfo(userId: string) {
   const [me] = await db
     .select({ referralCode: users.referralCode })

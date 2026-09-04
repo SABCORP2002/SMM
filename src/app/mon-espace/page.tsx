@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getUserDashboard } from "@/db/queries";
 import { requireUser } from "@/lib/auth";
+import { syncActiveOrders } from "@/lib/orders";
 import { formatMoney, timeAgo } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/button";
 import {
@@ -16,6 +17,7 @@ export const metadata: Metadata = { title: "Tableau de bord" };
 
 export default async function DashboardHome() {
   const user = await requireUser();
+  await syncActiveOrders({ userId: user.id, limit: 10 });
   const data = await getUserDashboard(user.id);
 
   return (

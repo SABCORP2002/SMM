@@ -90,7 +90,7 @@ export default async function ServicesPage({
                           </td>
                           <td className="rounded-r-xl border border-l-0 border-border px-4 py-3 text-right">
                             <ButtonLink
-                              href="/inscription"
+                              href={`/mon-espace/nouvelle-commande?service=${s.id}`}
                               size="sm"
                               variant="outline"
                             >

@@ -7,8 +7,8 @@ export type DashNavItem = {
 
 export const DASHBOARD_NAV: DashNavItem[] = [
   { label: "Tableau de bord", href: "/mon-espace" },
-  { label: "Nouvelle commande", href: "/mon-espace/nouvelle-commande", soon: true },
-  { label: "Mes commandes", href: "/mon-espace/commandes", soon: true },
+  { label: "Nouvelle commande", href: "/mon-espace/nouvelle-commande" },
+  { label: "Mes commandes", href: "/mon-espace/commandes" },
   { label: "Recharger", href: "/mon-espace/recharger", soon: true },
   { label: "Historique", href: "/mon-espace/historique", soon: true },
   { label: "Parrainage", href: "/mon-espace/parrainage" },

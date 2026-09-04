@@ -10,17 +10,33 @@ import bcrypt from "bcryptjs";
 import { db } from "./index";
 import {
   categories,
+  orders,
   pages,
+  payments,
   posts,
+  providers,
+  referrals,
   services,
+  sessions,
   settings,
+  ticketMessages,
+  tickets,
+  transactions,
   users,
 } from "./schema";
 import { makeReferralCode, slugify } from "../lib/utils";
 
 async function reset() {
   // Ordre inverse des dépendances.
+  await db.delete(ticketMessages);
+  await db.delete(tickets);
+  await db.delete(transactions);
+  await db.delete(orders);
+  await db.delete(payments);
+  await db.delete(referrals);
+  await db.delete(sessions);
   await db.delete(services);
+  await db.delete(providers);
   await db.delete(categories);
   await db.delete(posts);
   await db.delete(pages);
@@ -159,8 +175,27 @@ const CATALOG: {
   },
 ];
 
-async function seedCatalog() {
+async function seedProvider() {
+  // apiUrl vide → le panel bascule automatiquement sur le fournisseur de
+  // démonstration (src/lib/provider/mock.ts). Renseigner apiUrl/apiKey ici
+  // (ou via le futur back-office) pour brancher un vrai fournisseur.
+  const [provider] = await db
+    .insert(providers)
+    .values({
+      name: "Fournisseur de démonstration",
+      apiUrl: "",
+      apiKey: "",
+      balance: 0,
+      currency: "USD",
+      notes: "Bac à sable — aucune requête réseau, cycle de vie simulé.",
+    })
+    .returning();
+  return provider;
+}
+
+async function seedCatalog(providerId: string) {
   let categorySort = 0;
+  let serviceCounter = 1000;
   for (const block of CATALOG) {
     const [cat] = await db
       .insert(categories)
@@ -177,6 +212,8 @@ async function seedCatalog() {
     for (const s of block.services) {
       await db.insert(services).values({
         categoryId: cat.id,
+        providerId,
+        providerServiceId: String(serviceCounter++),
         name: s.name,
         description: s.desc,
         platform: block.platform,
@@ -262,8 +299,10 @@ async function main() {
   await seedSettings();
   console.log("→ Utilisateurs…");
   const { admin, demo } = await seedUsers();
+  console.log("→ Fournisseur de démonstration…");
+  const provider = await seedProvider();
   console.log("→ Catalogue…");
-  await seedCatalog();
+  await seedCatalog(provider.id);
   console.log("→ Contenu (blog + pages)…");
   await seedContent(admin.id);
 
