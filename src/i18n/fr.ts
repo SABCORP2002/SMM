@@ -105,6 +105,71 @@ export const fr = {
     finalCtaTitle: "Prêt à passer la vitesse supérieure ?",
     finalCtaBody:
       "Rejoins les créateurs, community managers et petites entreprises qui utilisent JAL SMM pour donner de l'élan à leurs réseaux.",
+    finalCtaPoints: ["Aucun frais caché", "Livraison automatique", "Support qui répond"],
+
+    pricingTeaserTitle: "Des prix affichés, pas devinés",
+    pricingTeaserSubtitle:
+      "Un échantillon de nos tarifs les plus bas. Le catalogue complet est cent pour cent transparent.",
+
+    comparisonTitle: "Pourquoi un panel pensé pour l'Afrique change tout",
+    comparisonSubtitle: "Les mêmes services, une expérience complètement différente.",
+    comparisonOtherLabel: "Panel classique",
+    comparisonUsLabel: "JAL SMM",
+    comparisonOther: [
+      "Interface en anglais, prix en dollars à convertir",
+      "Paiement par carte bancaire uniquement, souvent refusée",
+      "Support dans un autre fuseau horaire, réponse en jours",
+      "Revendeur qui revend un revendeur : prix gonflés",
+      "Aucun conseil, tu es livré à toi-même",
+    ],
+    comparisonUs: [
+      "100 % en français, prix affichés en francs CFA",
+      "Orange Money, MTN MoMo, Moov Money, Wave",
+      "Support humain sur WhatsApp, même fuseau horaire",
+      "Connecté directement à la source, marge transparente",
+      "Des tutoriels pour développer une vraie audience",
+    ],
+
+    earnTitle: "Fais aussi de JAL SMM une source de revenus",
+    earnSubtitle: "Deux façons d'en tirer profit, en plus de tes propres commandes.",
+    earn: [
+      {
+        badge: "Disponible maintenant",
+        title: "Programme de parrainage",
+        body: "Partage ton lien, touche une commission sur chaque recharge de tes filleuls. Suivi en temps réel depuis ton espace client.",
+        cta: "Créer mon compte",
+        href: "/inscription",
+      },
+      {
+        badge: "Bientôt disponible",
+        title: "Panel en marque blanche",
+        body: "Ton propre panel SMM, à ton nom et sur ton domaine, sans rien développer. Tu fixes tes prix, on s'occupe du reste.",
+        cta: "Être prévenu en priorité",
+        href: "whatsapp",
+      },
+    ],
+
+    personasTitle: "Quel que soit ton objectif, JAL SMM s'adapte",
+    personas: [
+      {
+        title: "Créateurs & influenceurs",
+        body: "Donne un coup d'accélérateur à tes nouvelles publications pendant que ton contenu fait le reste.",
+      },
+      {
+        title: "Community managers & agences",
+        body: "Gère plusieurs comptes clients et commande en quelques clics, avec un historique clair pour chaque facture.",
+      },
+      {
+        title: "Commerces & entrepreneurs",
+        body: "Une page qui a l'air déjà active inspire confiance à tes futurs clients dès le premier coup d'œil.",
+      },
+      {
+        title: "Revendeurs",
+        body: "Achète en gros grâce à nos tarifs, revends à ton réseau à ton propre prix, garde ta marge.",
+      },
+    ],
+
+    faqTeaserTitle: "Les questions qu'on nous pose le plus",
   },
 
   footer: {

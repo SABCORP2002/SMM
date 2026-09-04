@@ -2,22 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 import { PlatformIcon } from "@/components/brand/platform-icon";
+import { getHomeStats, getPricingTeaser } from "@/db/queries";
 import { PLATFORMS } from "@/lib/constants";
+import { formatMoney } from "@/lib/utils";
+import { siteConfig } from "@/config/site";
 import { fr } from "@/i18n/fr";
 
 export const metadata: Metadata = {
   description: fr.home.heroSubtitle,
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [stats, teaser] = await Promise.all([getHomeStats(), getPricingTeaser(6)]);
+
   return (
     <>
       <Hero />
       <StatsBand />
-      <Platforms />
+      <Platforms stats={stats} />
       <HowItWorks />
       <WhyUs />
+      <PricingTeaser services={teaser} />
+      <Comparison />
+      <EarnMoney />
+      <Personas />
       <Honesty />
+      <FaqTeaser />
       <FinalCta />
     </>
   );
@@ -145,12 +155,16 @@ function StatsBand() {
   );
 }
 
-function Platforms() {
+function Platforms({ stats }: { stats: { serviceCount: number; platformCount: number } }) {
   return (
     <section className="container-page py-16 lg:py-20">
       <SectionHeading
         title={fr.home.servicesTitle}
-        subtitle={fr.home.servicesSubtitle}
+        subtitle={
+          stats.serviceCount > 0
+            ? `${stats.serviceCount} services actifs sur ${stats.platformCount} réseaux, prix affichés au grand jour. Choisis ta plateforme.`
+            : fr.home.servicesSubtitle
+        }
       />
       <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {PLATFORMS.map((p) => (
@@ -231,6 +245,154 @@ function WhyUs() {
   );
 }
 
+type TeaserService = {
+  id: string;
+  name: string;
+  rate: number;
+  minQuantity: number;
+  platform: string | null;
+};
+
+function PricingTeaser({ services }: { services: TeaserService[] }) {
+  if (services.length === 0) return null;
+
+  return (
+    <section className="bg-surface">
+      <div className="container-page py-16 lg:py-20">
+        <SectionHeading
+          title={fr.home.pricingTeaserTitle}
+          subtitle={fr.home.pricingTeaserSubtitle}
+        />
+        <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-border bg-white">
+          <table className="w-full text-sm">
+            <tbody>
+              {services.map((s, i) => {
+                const platform = PLATFORMS.find((p) => p.key === s.platform);
+                return (
+                  <tr key={s.id} className={i > 0 ? "border-t border-border" : ""}>
+                    <td className="w-10 py-3 pl-4">
+                      {platform && <PlatformIcon platform={platform} size={18} />}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <p className="font-medium text-ink-900">{s.name}</p>
+                      <p className="text-xs text-muted">
+                        Dès {s.minQuantity.toLocaleString("fr-FR")} unités
+                      </p>
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      <span className="font-bold text-brand-700">{formatMoney(s.rate)}</span>
+                      <span className="ml-1 text-xs text-muted">/1000</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-6 text-center">
+          <ButtonLink href="/tarifs" variant="outline">
+            Voir tous les tarifs
+          </ButtonLink>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Comparison() {
+  return (
+    <section className="container-page py-16 lg:py-20">
+      <SectionHeading
+        title={fr.home.comparisonTitle}
+        subtitle={fr.home.comparisonSubtitle}
+      />
+      <div className="mx-auto mt-10 grid max-w-4xl gap-5 sm:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-surface p-6">
+          <h3 className="text-sm font-bold uppercase tracking-wide text-muted">
+            {fr.home.comparisonOtherLabel}
+          </h3>
+          <ul className="mt-4 space-y-3">
+            {fr.home.comparisonOther.map((line) => (
+              <li key={line} className="flex items-start gap-2 text-sm text-ink-600">
+                <span aria-hidden className="mt-0.5 text-red-400">
+                  ✕
+                </span>
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-2xl border-2 border-brand-500 bg-white p-6 shadow-lg shadow-brand-500/10">
+          <h3 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-brand-700">
+            {fr.home.comparisonUsLabel}
+            <span className="rounded-full bg-brand-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+              Notre choix
+            </span>
+          </h3>
+          <ul className="mt-4 space-y-3">
+            {fr.home.comparisonUs.map((line) => (
+              <li key={line} className="flex items-start gap-2 text-sm font-medium text-ink-900">
+                <CheckIcon className="mt-0.5 size-4 shrink-0 text-brand-600" />
+                <span>{line}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function EarnMoney() {
+  const wa = `https://wa.me/${siteConfig.contact.whatsapp.replace(/[^\d]/g, "")}`;
+
+  return (
+    <section className="bg-surface">
+      <div className="container-page py-16 lg:py-20">
+        <SectionHeading title={fr.home.earnTitle} subtitle={fr.home.earnSubtitle} />
+        <div className="mx-auto mt-10 grid max-w-3xl gap-5 sm:grid-cols-2">
+          {fr.home.earn.map((item) => (
+            <div key={item.title} className="flex flex-col rounded-2xl border border-border bg-white p-6">
+              <span className="inline-flex w-fit rounded-full bg-gold-400/20 px-2.5 py-1 text-xs font-semibold text-gold-600">
+                {item.badge}
+              </span>
+              <h3 className="mt-4 text-lg font-bold text-ink-900">{item.title}</h3>
+              <p className="mt-2 flex-1 text-sm leading-6 text-muted">{item.body}</p>
+              <ButtonLink
+                href={item.href === "whatsapp" ? wa : item.href}
+                variant="outline"
+                size="sm"
+                className="mt-5 w-fit"
+                {...(item.href === "whatsapp"
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
+              >
+                {item.cta}
+              </ButtonLink>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Personas() {
+  return (
+    <section className="container-page py-16 lg:py-20">
+      <SectionHeading title={fr.home.personasTitle} />
+      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {fr.home.personas.map((p) => (
+          <div key={p.title} className="rounded-2xl border border-border bg-white p-5">
+            <h3 className="text-sm font-bold text-ink-900">{p.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-muted">{p.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function Honesty() {
   return (
     <section className="bg-surface">
@@ -248,6 +410,39 @@ function Honesty() {
   );
 }
 
+function FaqTeaser() {
+  const items = fr.faq.items.slice(0, 4);
+  return (
+    <section className="container-page py-16 lg:py-20">
+      <SectionHeading title={fr.home.faqTeaserTitle} />
+      <div className="mx-auto mt-10 max-w-3xl space-y-3">
+        {items.map((item) => (
+          <details
+            key={item.q}
+            className="group rounded-2xl border border-border bg-white p-5 [&_summary::-webkit-details-marker]:hidden"
+          >
+            <summary className="flex cursor-pointer items-center justify-between gap-4 font-semibold text-ink-900">
+              {item.q}
+              <span
+                aria-hidden
+                className="shrink-0 text-brand-600 transition-transform group-open:rotate-45"
+              >
+                +
+              </span>
+            </summary>
+            <p className="mt-3 text-sm leading-7 text-muted">{item.a}</p>
+          </details>
+        ))}
+      </div>
+      <div className="mt-6 text-center">
+        <ButtonLink href="/aide" variant="outline">
+          Voir toutes les questions
+        </ButtonLink>
+      </div>
+    </section>
+  );
+}
+
 function FinalCta() {
   return (
     <section className="container-page py-16 lg:py-20">
@@ -258,6 +453,14 @@ function FinalCta() {
         <p className="mx-auto mt-4 max-w-xl text-ink-200">
           {fr.home.finalCtaBody}
         </p>
+        <ul className="mx-auto mt-6 flex max-w-xl flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-ink-100">
+          {fr.home.finalCtaPoints.map((point) => (
+            <li key={point} className="flex items-center gap-2">
+              <CheckIcon className="size-4 shrink-0 text-brand-400" />
+              {point}
+            </li>
+          ))}
+        </ul>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <ButtonLink href="/inscription" size="lg" variant="gold">
             {fr.common.getStarted}

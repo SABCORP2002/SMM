@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "./index";
 import {
   categories,
@@ -35,6 +35,39 @@ export async function getCatalog(platform?: string) {
     ...cat,
     services: svc.filter((s) => s.categoryId === cat.id),
   }));
+}
+
+/** Chiffres réels du catalogue, pour la preuve sociale honnête de l'accueil. */
+export async function getHomeStats() {
+  const [svcCount] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(services)
+    .where(eq(services.isActive, true));
+  const platformRows = await db
+    .selectDistinct({ platform: categories.platform })
+    .from(categories)
+    .where(eq(categories.isActive, true));
+
+  return {
+    serviceCount: Number(svcCount?.n ?? 0),
+    platformCount: platformRows.filter((r) => r.platform).length,
+  };
+}
+
+/** Les tarifs les plus bas du catalogue — ancrage prix pour l'accueil. */
+export async function getPricingTeaser(limit = 6) {
+  return db
+    .select({
+      id: services.id,
+      name: services.name,
+      rate: services.rate,
+      minQuantity: services.minQuantity,
+      platform: services.platform,
+    })
+    .from(services)
+    .where(eq(services.isActive, true))
+    .orderBy(asc(services.rate))
+    .limit(limit);
 }
 
 /** Liste distincte des plateformes présentes dans les catégories actives. */
