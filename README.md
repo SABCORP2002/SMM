@@ -4,6 +4,9 @@ Panneau SMM (Social Media Marketing) **pensé pour l'Afrique francophone** :
 vocabulaire local, prix en francs CFA, paiement Mobile Money, volet pédagogique.
 Inspiré du modèle des panels type *Perfect Panel*, réécrit pour ce public.
 
+**En ligne (démo)** : https://smm-sabcorp2002s-projects.vercel.app
+Comptes de test : `admin@jalsmm.com` / `admin1234` — `client@example.com` / `client1234`
+
 ## État d'avancement
 
 | Phase | Contenu | Statut |
@@ -87,6 +90,17 @@ carte bancaire :
    DATABASE_URL="<url Neon>" npm run db:seed   # ou ton propre contenu
    ```
    (sous PowerShell : `$env:DATABASE_URL="<url Neon>"; npm run db:push`)
+
+> **À savoir** : une fois une base Neon/Postgres connectée via l'onglet
+> Storage, Vercel **ne permet plus de relire sa chaîne de connexion via
+> l'API** (secret d'intégration, protection volontaire de leur plateforme —
+> même un token complet renvoie `"decrypted": false`). Récupère-la une fois
+> depuis l'écran de l'intégration (bouton **Show secret**) et garde-la
+> précieusement pour tes prochains `db:push`/`db:seed` contre la prod.
+>
+> Si le site reste inaccessible (redirection 302 vers une page de connexion
+> Vercel) après un déploiement réussi, désactive la protection dans
+> **Project Settings → Deployment Protection**.
 
 ## Scripts
 

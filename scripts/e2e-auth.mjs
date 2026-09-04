@@ -2,7 +2,7 @@
 import puppeteer from "puppeteer-core";
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
-const BASE = "http://localhost:3000";
+const BASE = process.env.E2E_BASE || "http://localhost:3000";
 const email = `test-${Date.now()}@example.com`;
 const PASS = "motdepasse123";
 
