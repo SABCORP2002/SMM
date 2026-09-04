@@ -1,8 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
-import { payments, transactions, users } from "@/db/schema";
+import { payments, referrals, transactions, users } from "@/db/schema";
 import { getPaymentGateway } from "@/lib/payment";
 import { siteConfig } from "@/config/site";
+import { getDepositBonusPercent } from "@/lib/constants";
 import { makePaymentReference } from "@/lib/utils";
 
 export class PaymentError extends Error {}
@@ -18,6 +19,9 @@ export type TopUpResult = {
   paymentId: string;
   reference: string;
   redirectUrl: string | null;
+  amount: number;
+  bonusPercent: number;
+  creditedAmount: number;
   /** true en mode bac à sable : le client peut afficher un message adapté. */
   isMock: boolean;
 };
@@ -42,12 +46,15 @@ export async function initiateTopUp(input: TopUpInput): Promise<TopUpResult> {
 
   const gateway = getPaymentGateway();
   const reference = makePaymentReference();
+  const bonusPercent = getDepositBonusPercent(amount);
+  const creditedAmount = Math.round(amount * (1 + bonusPercent / 100));
 
   const [payment] = await db
     .insert(payments)
     .values({
       userId: user.id,
       amount,
+      creditedAmount,
       currency: user.currency,
       method: "mobile_money",
       gateway: gateway.kind,
@@ -77,6 +84,9 @@ export async function initiateTopUp(input: TopUpInput): Promise<TopUpResult> {
       paymentId: payment.id,
       reference,
       redirectUrl: result.redirectUrl,
+      amount,
+      bonusPercent,
+      creditedAmount,
       isMock: gateway.kind === "mock",
     };
   } catch (err) {
@@ -91,6 +101,49 @@ export async function initiateTopUp(input: TopUpInput): Promise<TopUpResult> {
       "La passerelle de paiement n'a pas répondu. Réessaie dans un instant.",
     );
   }
+}
+
+/** Verse sa commission au parrain, s'il y en a un. N'échoue jamais l'appelant. */
+async function payReferralCommission(depositorId: string, depositAmount: number) {
+  const [depositor] = await db
+    .select({ referredById: users.referredById })
+    .from(users)
+    .where(eq(users.id, depositorId))
+    .limit(1);
+  if (!depositor?.referredById) return;
+
+  const [ref] = await db
+    .select()
+    .from(referrals)
+    .where(eq(referrals.refereeId, depositorId))
+    .limit(1);
+  if (!ref) return;
+
+  const commission = Math.round((depositAmount * ref.commissionPercent) / 100);
+  if (commission <= 0) return;
+
+  await db.transaction(async (tx) => {
+    const [sponsor] = await tx
+      .select({ balance: users.balance })
+      .from(users)
+      .where(eq(users.id, ref.referrerId))
+      .limit(1);
+    if (!sponsor) return;
+
+    const newBalance = Number(sponsor.balance) + commission;
+    await tx.update(users).set({ balance: newBalance }).where(eq(users.id, ref.referrerId));
+    await tx
+      .update(referrals)
+      .set({ totalEarned: Number(ref.totalEarned) + commission })
+      .where(eq(referrals.id, ref.id));
+    await tx.insert(transactions).values({
+      userId: ref.referrerId,
+      type: "referral_bonus",
+      amount: commission,
+      balanceAfter: newBalance,
+      description: "Commission de parrainage — recharge d'un filleul",
+    });
+  });
 }
 
 /** Crédite le portefeuille (transaction atomique), une seule fois par paiement. */
@@ -117,6 +170,8 @@ async function creditWallet(paymentId: string, userId: string, amount: number, r
       paymentId,
     });
   });
+
+  await payReferralCommission(userId, amount);
 }
 
 /** Interroge la passerelle pour les paiements en attente et crédite si confirmés. */
@@ -143,7 +198,8 @@ export async function syncPendingPayments(opts?: {
     try {
       const res = await gateway.verify(p.externalReference);
       if (res.status === "completed") {
-        await creditWallet(p.id, p.userId, res.amount ?? Number(p.amount), p.reference);
+        // creditedAmount inclut déjà la prime de recharge, fixée au moment de la demande.
+        await creditWallet(p.id, p.userId, Number(p.creditedAmount ?? p.amount), p.reference);
         credited++;
       } else if (res.status === "failed" || res.status === "canceled") {
         await db

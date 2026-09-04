@@ -220,14 +220,16 @@ export async function getReferralInfo(userId: string) {
     .orderBy(desc(users.createdAt));
 
   const [agg] = await db
-    .select({ totalEarned: referrals.totalEarned })
+    .select({
+      totalEarned: sql<number>`coalesce(sum(${referrals.totalEarned}), 0)`,
+    })
     .from(referrals)
-    .where(eq(referrals.referrerId, userId))
-    .limit(1);
+    .where(eq(referrals.referrerId, userId));
 
   return {
     referralCode: me?.referralCode ?? "",
     filleuls,
-    totalEarned: filleuls.length ? Number(agg?.totalEarned ?? 0) : 0,
+    totalEarned: Number(agg?.totalEarned ?? 0),
+    commissionPercent: 5,
   };
 }

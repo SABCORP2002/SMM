@@ -9,6 +9,7 @@ export type TopUpFormState = {
   error?: string;
   redirectUrl?: string | null;
   isMock?: boolean;
+  creditedAmount?: number;
 };
 
 export async function createTopUpAction(
@@ -29,7 +30,12 @@ export async function createTopUpAction(
     revalidatePath("/mon-espace/historique");
     revalidatePath("/mon-espace");
 
-    return { ok: true, redirectUrl: result.redirectUrl, isMock: result.isMock };
+    return {
+      ok: true,
+      redirectUrl: result.redirectUrl,
+      isMock: result.isMock,
+      creditedAmount: result.creditedAmount,
+    };
   } catch (err) {
     if (err instanceof PaymentError) return { error: err.message };
     console.error("createTopUpAction", err);

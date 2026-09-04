@@ -13,7 +13,7 @@ export default async function TopUpPage() {
     <>
       <DashHeading
         title="Recharger mon compte"
-        description="Par Mobile Money : Orange Money, MTN MoMo, Moov Money, Wave, Airtel Money."
+        description="Par Mobile Money : Orange Money, MTN MoMo, Moov Money, Wave, Airtel Money. Plus tu recharges d'un coup, plus la prime est élevée."
       />
 
       <div className="mx-auto max-w-xl space-y-4">

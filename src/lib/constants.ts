@@ -103,3 +103,64 @@ export const MOBILE_MONEY_OPERATORS = [
   { key: "wave", label: "Wave" },
   { key: "airtel", label: "Airtel Money" },
 ] as const;
+
+/**
+ * Prime de recharge : encourage les rechargements plus importants.
+ * On prend le palier le plus haut atteint par le montant. 100 % honnête et
+ * appliqué automatiquement (pas une promesse en l'air) — voir
+ * src/lib/payments.ts.
+ */
+export const DEPOSIT_BONUS_TIERS = [
+  { min: 50000, bonusPercent: 8 },
+  { min: 15000, bonusPercent: 5 },
+  { min: 5000, bonusPercent: 2 },
+  { min: 0, bonusPercent: 0 },
+] as const;
+
+export function getDepositBonusPercent(amount: number): number {
+  const tier = DEPOSIT_BONUS_TIERS.find((t) => amount >= t.min);
+  return tier?.bonusPercent ?? 0;
+}
+
+/**
+ * Paliers de fidélité, basés sur le total réellement dépensé (aucun chiffre
+ * inventé). Les remises restent à activer manuellement pour l'instant
+ * (customRatePercent existe déjà sur `users` pour ça) — on ne promet donc
+ * que ce qui est vraiment tenu automatiquement.
+ */
+export const LOYALTY_TIERS = [
+  {
+    key: "nouveau",
+    label: "Nouveau",
+    minSpend: 0,
+    perks: ["Accès à tout le catalogue dès l'inscription", "Support humain sur WhatsApp"],
+  },
+  {
+    key: "argent",
+    label: "Argent",
+    minSpend: 10000,
+    perks: ["Réponse prioritaire sur WhatsApp", "Accès en avant-première aux nouveaux services"],
+  },
+  {
+    key: "or",
+    label: "Or",
+    minSpend: 50000,
+    perks: ["Tarifs préférentiels sur demande", "Ligne directe pour les grosses commandes"],
+  },
+  {
+    key: "platine",
+    label: "Platine",
+    minSpend: 200000,
+    perks: ["Interlocuteur dédié", "Conditions négociées au cas par cas"],
+  },
+] as const;
+
+export function getLoyaltyTier(totalSpend: number) {
+  return (
+    [...LOYALTY_TIERS].reverse().find((t) => totalSpend >= t.minSpend) ?? LOYALTY_TIERS[0]
+  );
+}
+
+export function getNextLoyaltyTier(totalSpend: number) {
+  return LOYALTY_TIERS.find((t) => totalSpend < t.minSpend) ?? null;
+}

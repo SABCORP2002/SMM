@@ -39,22 +39,22 @@ export default async function NewOrderPage({
         title="Nouvelle commande"
         description="Choisis un réseau, un service, colle le lien : c'est parti."
       />
-      <div className="mx-auto max-w-xl">
-        <Panel>
-          {categories.length === 0 ? (
+      {categories.length === 0 ? (
+        <div className="mx-auto max-w-xl">
+          <Panel>
             <p className="text-sm text-muted">
               Aucun service disponible pour le moment.
             </p>
-          ) : (
-            <PlatformOrderWizard
-              categories={categories}
-              initialServiceId={initialServiceId}
-              balance={Number(user.balance)}
-              currency={user.currency}
-            />
-          )}
-        </Panel>
-      </div>
+          </Panel>
+        </div>
+      ) : (
+        <PlatformOrderWizard
+          categories={categories}
+          initialServiceId={initialServiceId}
+          balance={Number(user.balance)}
+          currency={user.currency}
+        />
+      )}
     </>
   );
 }

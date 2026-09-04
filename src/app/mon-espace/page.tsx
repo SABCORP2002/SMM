@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { syncActiveOrders } from "@/lib/orders";
 import { syncPendingPayments } from "@/lib/payments";
 import { formatMoney, timeAgo } from "@/lib/utils";
+import { getLoyaltyTier, getNextLoyaltyTier, LOYALTY_TIERS } from "@/lib/constants";
 import { ButtonLink } from "@/components/ui/button";
 import {
   DashHeading,
@@ -41,6 +42,8 @@ export default async function DashboardHome() {
           value={formatMoney(data.totalSpent, user.currency)}
         />
       </div>
+
+      <LoyaltyPanel totalSpent={data.totalSpent} currency={user.currency} />
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Panel title="Actions rapides" className="lg:col-span-1">
@@ -106,5 +109,59 @@ export default async function DashboardHome() {
         </Link>
       </p>
     </>
+  );
+}
+
+/** Palier de fidélité — basé sur le total réellement dépensé, aucun chiffre inventé. */
+function LoyaltyPanel({ totalSpent, currency }: { totalSpent: number; currency: string }) {
+  const tier = getLoyaltyTier(totalSpent);
+  const next = getNextLoyaltyTier(totalSpent);
+  const progress = next
+    ? Math.min(100, Math.round((totalSpent / next.minSpend) * 100))
+    : 100;
+
+  return (
+    <Panel className="mt-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted">Ton palier</p>
+          <p className="font-display text-xl font-extrabold text-ink-900">{tier.label}</p>
+        </div>
+        <div className="flex gap-1.5">
+          {LOYALTY_TIERS.map((t) => (
+            <span
+              key={t.key}
+              className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                t.key === tier.key
+                  ? "bg-brand-600 text-white"
+                  : totalSpent >= t.minSpend
+                    ? "bg-brand-50 text-brand-700"
+                    : "bg-ink-100 text-ink-400"
+              }`}
+            >
+              {t.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-ink-100">
+        <div className="h-full rounded-full bg-brand-600" style={{ width: `${progress}%` }} />
+      </div>
+      <p className="mt-1.5 text-xs text-muted">
+        {next
+          ? `Encore ${formatMoney(next.minSpend - totalSpent, currency)} de commandes pour débloquer le palier ${next.label}.`
+          : "Tu as atteint le palier le plus élevé."}
+      </p>
+
+      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-700">
+        {tier.perks.map((p) => (
+          <li key={p} className="flex items-center gap-1.5">
+            <span className="size-1 rounded-full bg-brand-600" />
+            {p}
+          </li>
+        ))}
+      </ul>
+    </Panel>
   );
 }
