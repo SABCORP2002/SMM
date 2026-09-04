@@ -120,6 +120,107 @@ export const fr = {
     disclaimer:
       "JAL SMM n'est affilié à aucun réseau social. Les marques citées appartiennent à leurs propriétaires respectifs.",
   },
+
+  howPage: {
+    title: "Comment ça marche",
+    description:
+      "De la création du compte à la livraison de ta commande : le déroulé complet, sans jargon.",
+    steps: [
+      {
+        title: "1. Crée ton compte",
+        body: "Il te faut une adresse e-mail et, idéalement, ton numéro WhatsApp pour le support. L'inscription est gratuite et immédiate. Aucun document, aucune carte bancaire demandée.",
+      },
+      {
+        title: "2. Recharge ton portefeuille",
+        body: "Depuis « Recharger mon compte », choisis un montant (dès 500 F) et ton moyen de paiement : Orange Money, MTN MoMo, Moov Money ou Wave. Tu valides avec ton code habituel ; le solde est crédité automatiquement, en général en moins d'une minute.",
+      },
+      {
+        title: "3. Choisis un service",
+        body: "Parcours le catalogue par plateforme (TikTok, Instagram, Facebook…). Chaque service indique son prix pour 1 000 unités, la quantité minimale et maximale, et le délai moyen constaté.",
+      },
+      {
+        title: "4. Passe la commande",
+        body: "Colle le lien exact (profil ou publication selon le service), saisis la quantité voulue : le prix se calcule tout seul. Tu confirmes, le montant est débité de ton solde.",
+      },
+      {
+        title: "5. Suis la livraison",
+        body: "La commande passe de « En attente » à « En cours » puis « Terminée ». Tu vois le compteur de départ et le reste à livrer. Si une commande ne démarre pas, elle est remboursée sur ton solde.",
+      },
+    ],
+    noteTitle: "Bon à savoir",
+    notes: [
+      "Vérifie que ton compte est public avant de commander des abonnés ou des likes.",
+      "Ne lance pas deux commandes identiques sur le même lien en même temps.",
+      "Les délais annoncés sont des moyennes : un pic de demande peut les allonger.",
+    ],
+  },
+
+  faq: {
+    title: "Centre d'aide",
+    description:
+      "Les réponses aux questions les plus fréquentes. Si tu ne trouves pas, écris-nous sur WhatsApp.",
+    items: [
+      {
+        q: "C'est quoi exactement un panneau SMM ?",
+        a: "Un service qui te permet d'acheter de l'engagement pour les réseaux sociaux (abonnés, vues, likes, vues de vidéo…) à des tarifs de gros, via un tableau de bord unique.",
+      },
+      {
+        q: "Est-ce que mon compte risque d'être banni ?",
+        a: "Une partie des services repose sur des comptes automatisés, ce qui va à l'encontre des conditions d'utilisation des plateformes. Le risque existe surtout si tu en abuses. Utilise ces services comme un appui ponctuel, pas comme seule méthode de croissance.",
+      },
+      {
+        q: "Comment je recharge mon compte ?",
+        a: "Par Mobile Money : Orange Money, MTN MoMo, Moov Money, Wave. Le rechargement minimum est de 500 F. Le crédit est automatique après confirmation du paiement.",
+      },
+      {
+        q: "En combien de temps ma commande est livrée ?",
+        a: "Ça dépend du service : de quelques minutes à quelques jours. Le délai moyen est indiqué sur chaque service dans le catalogue.",
+      },
+      {
+        q: "Je peux être remboursé ?",
+        a: "Oui : une commande non démarrée ou annulée est recréditée sur ton solde. Le solde peut servir à d'autres commandes.",
+      },
+      {
+        q: "Vous proposez un programme revendeur ?",
+        a: "Oui. Tu peux parrainer et toucher une commission sur les recharges de tes filleuls, et une API est prévue pour connecter ton propre panneau.",
+      },
+    ],
+  },
+
+  apiPage: {
+    title: "API revendeur",
+    description:
+      "Connecte ton propre panneau ou ton application à JAL SMM. API HTTP standard, compatible avec l'écosystème SMM habituel.",
+    soon: "La documentation complète et les clés API arrivent avec la phase revendeur. Écris-nous sur WhatsApp pour être prévenu en priorité.",
+    endpoints: [
+      { method: "POST", path: "/api/v1/order", desc: "Créer une commande" },
+      { method: "GET", path: "/api/v1/order/:id", desc: "Statut d'une commande" },
+      { method: "GET", path: "/api/v1/services", desc: "Liste des services et tarifs" },
+      { method: "GET", path: "/api/v1/balance", desc: "Solde du compte" },
+    ],
+  },
+
+  tutorials: {
+    title: "Tutoriels",
+    description:
+      "Des guides simples, en français, pour utiliser ces services intelligemment et vraiment faire grandir ton audience.",
+    empty: "Les premiers tutoriels arrivent très bientôt.",
+    readMore: "Lire le tutoriel",
+    backToList: "← Tous les tutoriels",
+    categories: {
+      tutoriel: "Tutoriel",
+      guide: "Guide",
+      actualite: "Actualité",
+    } as Record<string, string>,
+  },
+
+  auth: {
+    signInTitle: "Se connecter",
+    signUpTitle: "Créer un compte",
+    soonTitle: "Bientôt disponible",
+    soonBody:
+      "L'espace client (connexion, inscription, commandes, portefeuille) est en cours de développement. En attendant, écris-nous sur WhatsApp : on ouvre ton compte manuellement.",
+  },
 } as const;
 
 export type Dictionary = typeof fr;
