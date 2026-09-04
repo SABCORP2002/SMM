@@ -1,0 +1,19 @@
+services:
+  # Postgres local de développement pour JAL SMM.
+  # Port 5433 (et pas 5432) pour ne pas entrer en conflit avec d'autres
+  # projets qui tourneraient déjà en local sur cette machine.
+  db:
+    image: postgres:16-alpine
+    container_name: jal-smm-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: jal
+      POSTGRES_PASSWORD: jal
+      POSTGRES_DB: jal_smm
+    ports:
+      - "5433:5432"
+    volumes:
+      - jal_smm_pgdata:/var/lib/postgresql/data
+
+volumes:
+  jal_smm_pgdata:

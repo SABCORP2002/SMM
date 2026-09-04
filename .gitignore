@@ -42,12 +42,3 @@ next-env.d.ts
 
 # Fichiers d'env : ne pas committer les vraies valeurs
 !.env.example
-
-# Base SQLite de dev
-/prisma/*.db
-/prisma/*.db-journal
-
-# Base SQLite locale (racine)
-/dev.db
-/dev.db-*
-/*.db

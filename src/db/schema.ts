@@ -1,20 +1,23 @@
 /**
- * Schéma de base de données JAL SMM (Drizzle ORM · SQLite en dev).
+ * Schéma de base de données JAL SMM (Drizzle ORM · PostgreSQL).
  *
- * Portabilité PostgreSQL : aucun type exotique. L'argent est stocké en `real`
- * (franc CFA → on arrondit à l'entier via `computeCharge` / `formatMoney`).
- * Les "enum" sont des `text` dont les valeurs autorisées sont documentées
- * dans `src/lib/constants.ts`.
+ * Postgres partout : Docker en local (voir docker-compose.yml), Neon /
+ * Vercel Postgres en production. Aucun type exotique — les "enum" sont des
+ * `text` dont les valeurs autorisées sont documentées dans src/lib/constants.ts,
+ * l'argent est en `doublePrecision` (on arrondit à l'affichage/au calcul via
+ * computeCharge / formatMoney).
  */
 import { sql } from "drizzle-orm";
 import {
+  boolean,
+  doublePrecision,
   index,
   integer,
-  real,
-  sqliteTable,
+  pgTable,
   text,
+  timestamp,
   uniqueIndex,
-} from "drizzle-orm/sqlite-core";
+} from "drizzle-orm/pg-core";
 
 const id = () =>
   text("id")
@@ -22,19 +25,17 @@ const id = () =>
     .$defaultFn(() => crypto.randomUUID());
 
 const createdAt = () =>
-  integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .$defaultFn(() => new Date());
+  timestamp("created_at", { mode: "date" }).notNull().defaultNow();
 
 const updatedAt = () =>
-  integer("updated_at", { mode: "timestamp" })
+  timestamp("updated_at", { mode: "date" })
     .notNull()
-    .$defaultFn(() => new Date())
+    .defaultNow()
     .$onUpdateFn(() => new Date());
 
 /* ─── Utilisateurs & sessions ─────────────────────────────────────── */
 
-export const users = sqliteTable(
+export const users = pgTable(
   "users",
   {
     id: id(),
@@ -45,15 +46,15 @@ export const users = sqliteTable(
     whatsapp: text("whatsapp"),
     role: text("role").notNull().default("user"), // user | admin | support
     status: text("status").notNull().default("active"), // active | suspended
-    balance: real("balance").notNull().default(0),
+    balance: doublePrecision("balance").notNull().default(0),
     currency: text("currency").notNull().default("XOF"),
     locale: text("locale").notNull().default("fr"),
-    customRatePercent: real("custom_rate_percent"),
+    customRatePercent: doublePrecision("custom_rate_percent"),
     apiKey: text("api_key"),
     referralCode: text("referral_code").notNull(),
     referredById: text("referred_by_id"),
-    emailVerifiedAt: integer("email_verified_at", { mode: "timestamp" }),
-    lastLoginAt: integer("last_login_at", { mode: "timestamp" }),
+    emailVerifiedAt: timestamp("email_verified_at", { mode: "date" }),
+    lastLoginAt: timestamp("last_login_at", { mode: "date" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -66,7 +67,7 @@ export const users = sqliteTable(
   ],
 );
 
-export const sessions = sqliteTable(
+export const sessions = pgTable(
   "sessions",
   {
     id: id(),
@@ -75,7 +76,7 @@ export const sessions = sqliteTable(
       .references(() => users.id, { onDelete: "cascade" }),
     userAgent: text("user_agent"),
     ip: text("ip"),
-    expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
     createdAt: createdAt(),
   },
   (t) => [index("sessions_user_idx").on(t.userId)],
@@ -83,21 +84,21 @@ export const sessions = sqliteTable(
 
 /* ─── Fournisseurs, catégories, services ──────────────────────────── */
 
-export const providers = sqliteTable("providers", {
+export const providers = pgTable("providers", {
   id: id(),
   name: text("name").notNull(),
   apiUrl: text("api_url").notNull(),
   apiKey: text("api_key").notNull(),
-  balance: real("balance").notNull().default(0),
+  balance: doublePrecision("balance").notNull().default(0),
   currency: text("currency").notNull().default("USD"),
   status: text("status").notNull().default("active"), // active | disabled
   notes: text("notes"),
-  lastSyncAt: integer("last_sync_at", { mode: "timestamp" }),
+  lastSyncAt: timestamp("last_sync_at", { mode: "date" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
 
-export const categories = sqliteTable(
+export const categories = pgTable(
   "categories",
   {
     id: id(),
@@ -106,14 +107,14 @@ export const categories = sqliteTable(
     description: text("description"),
     platform: text("platform"), // tiktok | instagram | ...
     sortOrder: integer("sort_order").notNull().default(0),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [uniqueIndex("categories_slug_unique").on(t.slug)],
 );
 
-export const services = sqliteTable(
+export const services = pgTable(
   "services",
   {
     id: id(),
@@ -127,19 +128,17 @@ export const services = sqliteTable(
     type: text("type").notNull().default("default"),
     platform: text("platform"),
     /** Prix public / 1000, devise du panel. */
-    rate: real("rate").notNull(),
+    rate: doublePrecision("rate").notNull(),
     /** Coût fournisseur / 1000 (devise du panel). */
-    providerRate: real("provider_rate"),
-    markupPercent: real("markup_percent").notNull().default(30),
+    providerRate: doublePrecision("provider_rate"),
+    markupPercent: doublePrecision("markup_percent").notNull().default(30),
     minQuantity: integer("min_quantity").notNull().default(10),
     maxQuantity: integer("max_quantity").notNull().default(100000),
-    dripfeed: integer("dripfeed", { mode: "boolean" }).notNull().default(false),
-    refill: integer("refill", { mode: "boolean" }).notNull().default(false),
-    cancelable: integer("cancelable", { mode: "boolean" })
-      .notNull()
-      .default(false),
+    dripfeed: boolean("dripfeed").notNull().default(false),
+    refill: boolean("refill").notNull().default(false),
+    cancelable: boolean("cancelable").notNull().default(false),
     averageTime: text("average_time"),
-    isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+    isActive: boolean("is_active").notNull().default(true),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -153,7 +152,7 @@ export const services = sqliteTable(
 
 /* ─── Commandes ───────────────────────────────────────────────────── */
 
-export const orders = sqliteTable(
+export const orders = pgTable(
   "orders",
   {
     id: id(),
@@ -165,8 +164,8 @@ export const orders = sqliteTable(
       .references(() => services.id),
     link: text("link").notNull(),
     quantity: integer("quantity").notNull(),
-    charge: real("charge").notNull(),
-    cost: real("cost"),
+    charge: doublePrecision("charge").notNull(),
+    cost: doublePrecision("cost"),
     startCount: integer("start_count"),
     remains: integer("remains"),
     status: text("status").notNull().default("pending"),
@@ -174,13 +173,11 @@ export const orders = sqliteTable(
     providerOrderId: text("provider_order_id"),
     externalStatus: text("external_status"),
     note: text("note"),
-    isDripfeed: integer("is_dripfeed", { mode: "boolean" })
-      .notNull()
-      .default(false),
+    isDripfeed: boolean("is_dripfeed").notNull().default(false),
     runs: integer("runs"),
     interval: integer("interval"),
     syncAttempts: integer("sync_attempts").notNull().default(0),
-    lastSyncAt: integer("last_sync_at", { mode: "timestamp" }),
+    lastSyncAt: timestamp("last_sync_at", { mode: "date" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -193,15 +190,15 @@ export const orders = sqliteTable(
 
 /* ─── Portefeuille : paiements & grand livre ──────────────────────── */
 
-export const payments = sqliteTable(
+export const payments = pgTable(
   "payments",
   {
     id: id(),
     userId: text("user_id")
       .notNull()
       .references(() => users.id),
-    amount: real("amount").notNull(),
-    creditedAmount: real("credited_amount"),
+    amount: doublePrecision("amount").notNull(),
+    creditedAmount: doublePrecision("credited_amount"),
     currency: text("currency").notNull().default("XOF"),
     method: text("method").notNull().default("mobile_money"),
     gateway: text("gateway").notNull().default("manual"),
@@ -221,7 +218,7 @@ export const payments = sqliteTable(
   ],
 );
 
-export const transactions = sqliteTable(
+export const transactions = pgTable(
   "transactions",
   {
     id: id(),
@@ -229,8 +226,8 @@ export const transactions = sqliteTable(
       .notNull()
       .references(() => users.id),
     type: text("type").notNull(),
-    amount: real("amount").notNull(),
-    balanceAfter: real("balance_after").notNull(),
+    amount: doublePrecision("amount").notNull(),
+    balanceAfter: doublePrecision("balance_after").notNull(),
     description: text("description").notNull(),
     orderId: text("order_id").references(() => orders.id),
     paymentId: text("payment_id").references(() => payments.id),
@@ -244,7 +241,7 @@ export const transactions = sqliteTable(
 
 /* ─── Parrainage ──────────────────────────────────────────────────── */
 
-export const referrals = sqliteTable(
+export const referrals = pgTable(
   "referrals",
   {
     id: id(),
@@ -254,8 +251,8 @@ export const referrals = sqliteTable(
     refereeId: text("referee_id")
       .notNull()
       .references(() => users.id),
-    commissionPercent: real("commission_percent").notNull().default(5),
-    totalEarned: real("total_earned").notNull().default(0),
+    commissionPercent: doublePrecision("commission_percent").notNull().default(5),
+    totalEarned: doublePrecision("total_earned").notNull().default(0),
     createdAt: createdAt(),
   },
   (t) => [
@@ -266,7 +263,7 @@ export const referrals = sqliteTable(
 
 /* ─── Support ─────────────────────────────────────────────────────── */
 
-export const tickets = sqliteTable(
+export const tickets = pgTable(
   "tickets",
   {
     id: id(),
@@ -287,7 +284,7 @@ export const tickets = sqliteTable(
   ],
 );
 
-export const ticketMessages = sqliteTable(
+export const ticketMessages = pgTable(
   "ticket_messages",
   {
     id: id(),
@@ -298,7 +295,7 @@ export const ticketMessages = sqliteTable(
       .notNull()
       .references(() => users.id),
     body: text("body").notNull(),
-    isStaff: integer("is_staff", { mode: "boolean" }).notNull().default(false),
+    isStaff: boolean("is_staff").notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [index("ticket_messages_ticket_idx").on(t.ticketId)],
@@ -306,7 +303,7 @@ export const ticketMessages = sqliteTable(
 
 /* ─── Contenu (blog / pages / config) ─────────────────────────────── */
 
-export const posts = sqliteTable(
+export const posts = pgTable(
   "posts",
   {
     id: id(),
@@ -318,7 +315,7 @@ export const posts = sqliteTable(
     category: text("category").notNull().default("tutoriel"),
     status: text("status").notNull().default("draft"),
     authorId: text("author_id").references(() => users.id),
-    publishedAt: integer("published_at", { mode: "timestamp" }),
+    publishedAt: timestamp("published_at", { mode: "date" }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -329,7 +326,7 @@ export const posts = sqliteTable(
   ],
 );
 
-export const pages = sqliteTable(
+export const pages = pgTable(
   "pages",
   {
     id: id(),
@@ -341,7 +338,7 @@ export const pages = sqliteTable(
   (t) => [uniqueIndex("pages_slug_unique").on(t.slug)],
 );
 
-export const settings = sqliteTable("settings", {
+export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
   group: text("group").notNull().default("general"),

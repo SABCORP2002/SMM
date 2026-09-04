@@ -1,19 +1,31 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
 import { schema } from "./schema";
 
-const url = process.env.DATABASE_URL || "file:./dev.db";
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error(
+    "DATABASE_URL manquant. En local : docker compose up -d (voir docker-compose.yml). " +
+      "En production : URL Postgres (Neon, Vercel Postgres, Supabase…) dans les variables d'environnement.",
+  );
+}
 
 /**
- * Client unique réutilisé entre les rechargements à chaud de Next
- * (évite d'ouvrir une connexion par requête en développement).
+ * Pool réutilisé entre les rechargements à chaud de Next en dev
+ * (évite d'épuiser les connexions Postgres à chaque HMR).
  */
-const globalForDb = globalThis as unknown as {
-  __jalDbClient?: ReturnType<typeof createClient>;
-};
+const globalForDb = globalThis as unknown as { __jalPgPool?: Pool };
 
-const client = globalForDb.__jalDbClient ?? createClient({ url });
-if (process.env.NODE_ENV !== "production") globalForDb.__jalDbClient = client;
+const pool =
+  globalForDb.__jalPgPool ??
+  new Pool({
+    connectionString,
+    // Neon/Vercel Postgres exigent TLS ; sans certificat local à valider.
+    ssl: connectionString.includes("sslmode=require")
+      ? { rejectUnauthorized: false }
+      : undefined,
+  });
+if (process.env.NODE_ENV !== "production") globalForDb.__jalPgPool = pool;
 
-export const db = drizzle(client, { schema });
+export const db = drizzle(pool, { schema });
 export { schema };
