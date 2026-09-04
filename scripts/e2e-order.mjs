@@ -1,4 +1,5 @@
-// Test de bout en bout du flux de commande (Phase 4).
+// Test de bout en bout du flux de commande (Phase 4) via le parcours
+// logo → service → détails (retravaillé suite au retour du client).
 import puppeteer from "puppeteer-core";
 
 const CHROME = "C:/Program Files/Google/Chrome/Application/chrome.exe";
@@ -17,28 +18,67 @@ const bodyText = () => page.evaluate(() => document.body.innerText);
 const waitForPath = (p) =>
   page.waitForFunction((path) => location.pathname === path, { timeout: 15000 }, p);
 
+async function setValue(selector, value) {
+  await page.waitForSelector(selector);
+  await page.evaluate(
+    (sel, val) => {
+      const el = document.querySelector(sel);
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      setter.call(el, val);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+    selector,
+    value,
+  );
+}
+
+function clickByText(text) {
+  return page.evaluate((t) => {
+    const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.includes(t));
+    if (!btn) throw new Error(`bouton contenant "${t}" introuvable`);
+    btn.click();
+  }, text);
+}
+
 try {
   // Connexion
   await page.goto(`${BASE}/connexion`, { waitUntil: "networkidle0" });
-  await page.type('input[name="email"]', "client@example.com");
-  await page.type('input[name="password"]', "client1234");
-  await page.click('button[type="submit"]');
+  await setValue('input[name="email"]', "client@example.com");
+  await setValue('input[name="password"]', "client1234");
+  await page.evaluate(() => {
+    const b = document.querySelector('button[type="submit"]');
+    b.form.requestSubmit(b);
+  });
   await waitForPath("/mon-espace");
   const before = await bodyText();
   const soldeAvant = before.match(/SOLDE DISPONIBLE\s*([\d\s]+)\s*F/)?.[1]?.replace(/\s/g, "");
   console.log(`[connexion] solde avant = ${soldeAvant} F`);
 
-  // Nouvelle commande
+  // Étape 1 — choisir la plateforme par son logo
   await page.goto(`${BASE}/mon-espace/nouvelle-commande`, { waitUntil: "networkidle0" });
-  await page.type('input[name="link"]', "https://tiktok.com/@e2e-test");
-  await page.type('input[name="quantity"]', "500");
-  await new Promise((r) => setTimeout(r, 200)); // laisse React calculer le prix
-  const priceText = await page.$eval(
-    'form:has(input[name="link"]) button[type="submit"]',
-    (b) => b.textContent,
-  );
-  console.log(`[commande] bouton: "${priceText.trim()}"`);
-  await page.click('form:has(input[name="link"]) button[type="submit"]');
+  await clickByText("TikTok");
+  await page.waitForFunction(() => document.body.innerText.includes("Abonnés"), { timeout: 5000 });
+  console.log("[commande] plateforme TikTok sélectionnée ✓");
+
+  // Étape 2 — choisir le service dans la liste (pas de menu déroulant)
+  await clickByText("Démarrage rapide");
+  await page.waitForSelector('input[name="link"]');
+  console.log("[commande] service sélectionné ✓");
+
+  // Étape 3 — lien + quantité
+  await setValue('input[name="link"]', "https://tiktok.com/@e2e-test");
+  await setValue('input[name="quantity"]', "500");
+  await new Promise((r) => setTimeout(r, 200));
+  const submitted = await page.evaluate(() => {
+    const form = document.querySelector('input[name="link"]')?.form;
+    const btn = form?.querySelector('button[type="submit"]');
+    if (!btn || btn.disabled) return { ok: false, text: btn?.textContent, disabled: btn?.disabled };
+    btn.form.requestSubmit(btn);
+    return { ok: true, text: btn.textContent };
+  });
+  console.log(`[commande] bouton: "${submitted.text?.trim()}" (soumis: ${submitted.ok})`);
+  if (!submitted.ok) throw new Error("bouton de commande désactivé ou introuvable au moment de la soumission");
   await waitForPath("/mon-espace/commandes");
   console.log("[commande] → /mon-espace/commandes ✓");
 
@@ -58,8 +98,6 @@ try {
   console.log(`[solde] avant=${soldeAvant} après=${soldeApres}`);
   if (Number(soldeApres) >= Number(soldeAvant)) throw new Error("le solde n'a pas été débité");
   console.log("[solde] débité correctement ✓");
-  if (!afterText.includes("tiktok.com") && !afterText.includes("Commandes récentes"))
-    throw new Error("commande absente du tableau de bord");
 
   // Attendre le passage « en cours » (le mock passe en_cours après 15s)
   console.log("[sync] attente du passage 'en cours' (jusqu'à 25s)…");

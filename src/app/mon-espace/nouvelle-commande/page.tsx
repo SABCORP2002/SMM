@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getCatalog } from "@/db/queries";
 import { requireUser } from "@/lib/auth";
 import { DashHeading, Panel } from "@/components/dashboard/ui";
-import { NewOrderForm } from "@/components/dashboard/new-order-form";
+import { PlatformOrderWizard } from "@/components/dashboard/platform-order-wizard";
 
 export const metadata: Metadata = { title: "Nouvelle commande" };
 
@@ -20,6 +20,7 @@ export default async function NewOrderPage({
     .map((c) => ({
       id: c.id,
       name: c.name,
+      platform: c.platform,
       services: c.services.map((s) => ({
         id: s.id,
         name: s.name,
@@ -36,7 +37,7 @@ export default async function NewOrderPage({
     <>
       <DashHeading
         title="Nouvelle commande"
-        description="Choisis un service, colle le lien, indique la quantité."
+        description="Choisis un réseau, un service, colle le lien : c'est parti."
       />
       <div className="mx-auto max-w-xl">
         <Panel>
@@ -45,7 +46,7 @@ export default async function NewOrderPage({
               Aucun service disponible pour le moment.
             </p>
           ) : (
-            <NewOrderForm
+            <PlatformOrderWizard
               categories={categories}
               initialServiceId={initialServiceId}
               balance={Number(user.balance)}
