@@ -14,10 +14,30 @@ await page.setViewport({ width: 1100, height: 900 });
 
 const bodyText = () => page.evaluate(() => document.body.innerText);
 
+/**
+ * Renseigne un champ en une fois (setter natif + événement input), pour
+ * éviter les pertes de frappe de `page.type` sur une cible distante à
+ * latence variable (observé contre un déploiement Vercel).
+ */
+async function setValue(selector, value) {
+  await page.waitForSelector(selector);
+  await page.evaluate(
+    (sel, val) => {
+      const el = document.querySelector(sel);
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      setter.call(el, val);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+    selector,
+    value,
+  );
+}
+
 try {
   await page.goto(`${BASE}/connexion`, { waitUntil: "networkidle0" });
-  await page.type('input[name="email"]', "client@example.com");
-  await page.type('input[name="password"]', "client1234");
+  await setValue('input[name="email"]', "client@example.com");
+  await setValue('input[name="password"]', "client1234");
   await page.click('button[type="submit"]');
   await page.waitForFunction(() => location.pathname === "/mon-espace", { timeout: 15000 });
   const before = await bodyText();
@@ -27,10 +47,8 @@ try {
   console.log(`[connexion] solde avant = ${soldeAvant} F`);
 
   await page.goto(`${BASE}/mon-espace/recharger`, { waitUntil: "networkidle0" });
-  await page.waitForSelector('input[name="phone"]');
   // Montant par défaut (1000 F) et opérateur par défaut (Orange) conviennent déjà.
-  await page.type('input[name="phone"]', "+2250700000002", { delay: 5 });
-  await page.evaluate(() => document.querySelector('input[name="phone"]').blur());
+  await setValue('input[name="phone"]', "+2250700000002");
   const submitted = await page.evaluate(() => {
     const btn = [...document.querySelectorAll('button[type="submit"]')].find((b) =>
       b.textContent.includes("Recharger"),

@@ -23,11 +23,30 @@ const bodyText = (page) => page.evaluate(() => document.body.innerText);
 const waitForPath = (page, p) =>
   page.waitForFunction((path) => location.pathname === path, { timeout: 15000 }, p);
 
+/**
+ * Renseigne un champ en une fois (setter natif + événement input), pour
+ * éviter les pertes de frappe de `page.type` sur une cible distante à
+ * latence variable (observé contre un déploiement Vercel).
+ */
+async function setValue(page, selector, value) {
+  await page.waitForSelector(selector);
+  await page.evaluate(
+    (sel, val) => {
+      const el = document.querySelector(sel);
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+      setter.call(el, val);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+    selector,
+    value,
+  );
+}
+
 async function login(page, email, password) {
   await page.goto(`${BASE}/connexion`, { waitUntil: "networkidle0" });
-  await page.waitForSelector('input[name="email"]');
-  await page.type('input[name="email"]', email, { delay: 5 });
-  await page.type('input[name="password"]', password, { delay: 5 });
+  await setValue(page, 'input[name="email"]', email);
+  await setValue(page, 'input[name="password"]', password);
   await page.evaluate(() => {
     const btn = document.querySelector('button[type="submit"]');
     btn.form.requestSubmit(btn);
@@ -55,13 +74,15 @@ try {
   await adminPage.goto(`${BASE}/admin/utilisateurs`, { waitUntil: "networkidle0" });
   const before = await bodyText(adminPage);
   const soldeAvant = before.match(/Awa Traoré[\s\S]{0,120}?([\d\s]+)\s*F/)?.[1]?.replace(/\s/g, "");
+  // Scoper précisément à la ligne d'Awa Traoré : plusieurs comptes de test
+  // peuvent s'être accumulés (chaque run de e2e-auth.mjs en crée un).
   await adminPage.evaluate(() => {
-    const link = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Ajuster");
-    link.click();
+    const row = [...document.querySelectorAll("tr")].find((tr) => tr.textContent.includes("Awa Traoré"));
+    const btn = [...row.querySelectorAll("button")].find((b) => b.textContent.trim() === "Ajuster");
+    btn.click();
   });
-  await adminPage.waitForSelector('input[name="amount"]');
-  await adminPage.type('input[name="amount"]', "1000", { delay: 5 });
-  await adminPage.type('input[name="reason"]', "Test E2E admin", { delay: 5 });
+  await setValue(adminPage, 'input[name="amount"]', "1000");
+  await setValue(adminPage, 'input[name="reason"]', "Test E2E admin");
   await adminPage.evaluate(() => {
     const btn = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "OK");
     btn.click();
