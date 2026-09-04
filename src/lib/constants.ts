@@ -41,6 +41,22 @@ export const PAYMENT_STATUSES = [
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  pending: "En attente",
+  completed: "Confirmé",
+  failed: "Échoué",
+  canceled: "Annulé",
+  refunded: "Remboursé",
+};
+
+export const PAYMENT_STATUS_STYLES: Record<PaymentStatus, string> = {
+  pending: "bg-ink-100 text-ink-700",
+  completed: "bg-brand-600 text-white",
+  failed: "bg-red-100 text-red-700",
+  canceled: "bg-red-100 text-red-700",
+  refunded: "bg-gold-400/20 text-gold-600",
+};
+
 export const TRANSACTION_TYPES = [
   "deposit",
   "order",
@@ -50,6 +66,15 @@ export const TRANSACTION_TYPES = [
   "chargeback",
 ] as const;
 export type TransactionType = (typeof TRANSACTION_TYPES)[number];
+
+export const TRANSACTION_TYPE_LABELS: Record<TransactionType, string> = {
+  deposit: "Rechargement",
+  order: "Commande",
+  refund: "Remboursement",
+  referral_bonus: "Commission de parrainage",
+  admin_adjustment: "Ajustement (admin)",
+  chargeback: "Rétrofacturation",
+};
 
 export const USER_ROLES = ["user", "admin", "support"] as const;
 export type UserRole = (typeof USER_ROLES)[number];

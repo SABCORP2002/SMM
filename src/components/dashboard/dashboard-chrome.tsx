@@ -135,6 +135,14 @@ export function DashboardChrome({
             </p>
             <NavLinks pathname={pathname} />
             <div className="mt-2 border-t border-border pt-2">
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gold-600 hover:bg-gold-400/10"
+                >
+                  ⚙️ Panel admin
+                </Link>
+              )}
               <LogoutButton />
             </div>
           </div>
@@ -162,6 +170,15 @@ export function DashboardChrome({
               </div>
               <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
               <div className="mt-auto border-t border-border pt-2">
+                {user.role === "admin" && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setOpen(false)}
+                    className="mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-gold-600 hover:bg-gold-400/10"
+                  >
+                    ⚙️ Panel admin
+                  </Link>
+                )}
                 <LogoutButton />
               </div>
             </div>

@@ -169,8 +169,8 @@ export async function placeOrder(
   return { orderId, charge, status: "pending" };
 }
 
-/** Recrédite le portefeuille (transaction atomique). */
-async function refund(
+/** Recrédite le portefeuille (transaction atomique). Réutilisé par l'admin. */
+export async function refund(
   orderId: string,
   userId: string,
   amount: number,

@@ -5,7 +5,8 @@ import { siteConfig } from "@/config/site";
 import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_STYLES,
-  type OrderStatus,
+  PAYMENT_STATUS_LABELS,
+  PAYMENT_STATUS_STYLES,
 } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
@@ -68,16 +69,25 @@ export function StatCard({
   );
 }
 
-export function StatusBadge({ status }: { status: string }) {
-  const s = status as OrderStatus;
+export function StatusBadge({
+  status,
+  kind = "order",
+}: {
+  status: string;
+  /** "order" (par défaut) ou "payment" — choisit le jeu de libellés/couleurs. */
+  kind?: "order" | "payment";
+}) {
+  const labels = kind === "payment" ? PAYMENT_STATUS_LABELS : ORDER_STATUS_LABELS;
+  const styles = kind === "payment" ? PAYMENT_STATUS_STYLES : ORDER_STATUS_STYLES;
+  const s = status as keyof typeof labels;
   return (
     <span
       className={cn(
         "inline-flex rounded-md px-2 py-0.5 text-xs font-semibold",
-        ORDER_STATUS_STYLES[s] ?? "bg-ink-100 text-ink-700",
+        styles[s] ?? "bg-ink-100 text-ink-700",
       )}
     >
-      {ORDER_STATUS_LABELS[s] ?? status}
+      {labels[s] ?? status}
     </span>
   );
 }

@@ -5,6 +5,7 @@ import {
   categories,
   orders,
   pages,
+  payments,
   posts,
   referrals,
   services,
@@ -146,6 +147,24 @@ export async function getUserOrders(userId: string, limit = 50) {
     .innerJoin(services, eq(orders.serviceId, services.id))
     .where(eq(orders.userId, userId))
     .orderBy(desc(orders.createdAt))
+    .limit(limit);
+}
+
+export async function getUserTransactions(userId: string, limit = 50) {
+  return db
+    .select()
+    .from(transactions)
+    .where(eq(transactions.userId, userId))
+    .orderBy(desc(transactions.createdAt))
+    .limit(limit);
+}
+
+export async function getUserPayments(userId: string, limit = 50) {
+  return db
+    .select()
+    .from(payments)
+    .where(eq(payments.userId, userId))
+    .orderBy(desc(payments.createdAt))
     .limit(limit);
 }
 

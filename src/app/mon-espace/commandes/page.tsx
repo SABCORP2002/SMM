@@ -5,7 +5,8 @@ import { syncActiveOrders } from "@/lib/orders";
 import { formatMoney, timeAgo } from "@/lib/utils";
 import { ButtonLink } from "@/components/ui/button";
 import { DashHeading, EmptyState, Panel, StatusBadge } from "@/components/dashboard/ui";
-import { RefreshOrdersButton } from "@/components/dashboard/refresh-orders-button";
+import { RefreshButton } from "@/components/dashboard/refresh-button";
+import { syncMyOrdersAction } from "@/actions/orders";
 
 export const metadata: Metadata = { title: "Mes commandes" };
 
@@ -22,7 +23,7 @@ export default async function OrdersPage() {
         title="Mes commandes"
         action={
           <div className="flex gap-2">
-            <RefreshOrdersButton />
+            <RefreshButton action={syncMyOrdersAction} />
             <ButtonLink href="/mon-espace/nouvelle-commande" size="sm">
               Nouvelle commande
             </ButtonLink>

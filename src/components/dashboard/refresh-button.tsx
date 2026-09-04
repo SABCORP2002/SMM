@@ -2,10 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { syncMyOrdersAction } from "@/actions/orders";
 import { Button } from "@/components/ui/button";
 
-export function RefreshOrdersButton() {
+/** Bouton générique : relance une Server Action de synchro puis rafraîchit la page. */
+export function RefreshButton({
+  action,
+  label = "Actualiser les statuts",
+}: {
+  action: () => Promise<void>;
+  label?: string;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -17,12 +23,12 @@ export function RefreshOrdersButton() {
       aria-busy={pending}
       onClick={() =>
         startTransition(async () => {
-          await syncMyOrdersAction();
+          await action();
           router.refresh();
         })
       }
     >
-      {pending ? "Actualisation…" : "Actualiser les statuts"}
+      {pending ? "Actualisation…" : label}
     </Button>
   );
 }

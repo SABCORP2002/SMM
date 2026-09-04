@@ -15,9 +15,28 @@ Comptes de test : `admin@jalsmm.com` / `admin1234` — `client@example.com` / `c
 | 2 | Site public complet : catalogue services, tarifs, tutoriels, pages légales, 404 | ✅ |
 | 3 | Authentification (session cookie) + espace client (tableau de bord, profil, parrainage) | ✅ |
 | 4 | Commandes : formulaire, calcul du prix, driver fournisseur (bac à sable), synchro des statuts | ✅ |
-| 5 | Paiements : portefeuille, Mobile Money (FedaPay/CinetPay sandbox), recharge manuelle | à venir |
-| 6 | Back-office admin : commandes, utilisateurs, services, fournisseurs | à venir |
+| 5 | Paiements : portefeuille, Mobile Money (bac à sable + driver FedaPay), recharge, historique | ✅ |
+| 6 | Back-office admin : tableau de bord, commandes, utilisateurs, services, fournisseurs, paiements | ✅ |
 | 7 | Extras : API revendeur, tickets, 2FA, tableaux de marge | à venir |
+
+### Paiements (`/mon-espace/recharger`, `/mon-espace/historique`)
+
+Même principe que le driver fournisseur SMM : `src/lib/payment/` bascule
+automatiquement sur un **bac à sable** (confirmation simulée ~8 s après la
+demande) tant qu'aucune clé `FEDAPAY_SECRET_KEY` n'est renseignée. Le solde
+est crédité via une transaction atomique (`src/lib/payments.ts`), synchronisée
+à chaque visite de page ou en continu par `npm run worker`.
+
+### Back-office (`/admin`)
+
+Protégé par `requireAdmin()` (redirige un non-admin vers `/mon-espace`). Le
+compte `admin@jalsmm.com` y arrive directement après connexion.
+- **Tableau de bord** : utilisateurs, commandes, chiffre d'affaires, paiements en attente
+- **Commandes** : liste complète, changement de statut (rembourse automatiquement en cas d'annulation)
+- **Utilisateurs** : ajustement manuel du solde (journalisé), suspension/réactivation
+- **Services** : activer/désactiver, modifier prix/quantités, en créer
+- **Fournisseurs** : modifier ou ajouter (sans URL/clé = bac à sable)
+- **Paiements** : historique complet, tous utilisateurs confondus
 
 ### Espace client (`/mon-espace`)
 
@@ -120,6 +139,8 @@ carte bancaire :
 | `node scripts/mobile-audit.mjs` | Détecte débordements horizontaux + cibles tactiles trop petites |
 | `node scripts/e2e-auth.mjs` | Test de bout en bout : inscription/connexion/profil |
 | `node scripts/e2e-order.mjs` | Test de bout en bout : passage et suivi d'une commande |
+| `node scripts/e2e-topup.mjs` | Test de bout en bout : rechargement Mobile Money (bac à sable) |
+| `node scripts/e2e-admin.mjs` | Test de bout en bout : back-office (ajustement de solde, services…) |
 
 ## Structure
 
