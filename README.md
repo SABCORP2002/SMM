@@ -8,13 +8,24 @@ Inspiré du modèle des panels type *Perfect Panel*, réécrit pour ce public.
 
 | Phase | Contenu | Statut |
 | ----- | ------- | ------ |
-| 1 | Fondations : stack, base de données, design system, site vitrine (accueil) | ✅ en cours |
-| 2 | Site public complet : catalogue services, tarifs, tutoriels, pages légales | à venir |
-| 3 | Authentification + espace client (tableau de bord, profil) | à venir |
+| 1 | Fondations : stack, base de données, design system, site vitrine (accueil) | ✅ |
+| 2 | Site public complet : catalogue services, tarifs, tutoriels, pages légales, 404 | ✅ |
+| 3 | Authentification (session cookie) + espace client (tableau de bord, profil, parrainage) | ✅ |
 | 4 | Commandes : formulaire, calcul du prix, API fournisseur, synchro des statuts | à venir |
 | 5 | Paiements : portefeuille, Mobile Money (FedaPay/CinetPay sandbox), recharge manuelle | à venir |
 | 6 | Back-office admin : commandes, utilisateurs, services, fournisseurs | à venir |
-| 7 | Extras : parrainage, API revendeur, tickets, 2FA | à venir |
+| 7 | Extras : API revendeur, tickets, 2FA, tableaux de marge | à venir |
+
+### Espace client (`/mon-espace`)
+
+Protégé par `requireUser()` (redirige vers `/connexion` sans session). Auth
+maison : mot de passe haché (bcrypt), session en base + cookie httpOnly.
+Fonctionnels : tableau de bord, paramètres (profil + mot de passe), parrainage.
+En attente de leur phase : nouvelle commande, mes commandes, recharger, historique.
+
+> Les formulaires client utilisent `useTransition` + `onSubmit` plutôt que
+> `useActionState` : ce dernier ne re-déclenche pas l'action à la 2ᵉ soumission
+> après une erreur (quirk React 19.2 / Next 16 constaté et contourné).
 
 ## Stack
 
@@ -57,7 +68,9 @@ npm run dev               # http://localhost:3000
 | `npm run db:studio` | Explorateur de base Drizzle Studio |
 | `npm run db:seed` | (Ré)injecte les données de démo |
 | `node scripts/shot.mjs <url> <largeur> <out.png>` | Capture d'écran (Chrome local) |
+| `node scripts/shot-auth.mjs <dossier> <largeur>` | Captures de l'espace client (connecté) |
 | `node scripts/measure-overflow.mjs <url> <largeur>` | Détecte les débordements horizontaux |
+| `node scripts/e2e-auth.mjs` | Test de bout en bout du flux d'authentification |
 
 ## Structure
 

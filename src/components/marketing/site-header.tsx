@@ -9,7 +9,7 @@ import { siteConfig } from "@/config/site";
 import { fr } from "@/i18n/fr";
 import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+export function SiteHeader({ authed = false }: { authed?: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -42,12 +42,20 @@ export function SiteHeader() {
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
-          <ButtonLink href="/connexion" variant="ghost" size="sm">
-            {fr.common.signIn}
-          </ButtonLink>
-          <ButtonLink href="/inscription" size="sm">
-            {fr.common.signUp}
-          </ButtonLink>
+          {authed ? (
+            <ButtonLink href="/mon-espace" size="sm">
+              {fr.common.dashboard}
+            </ButtonLink>
+          ) : (
+            <>
+              <ButtonLink href="/connexion" variant="ghost" size="sm">
+                {fr.common.signIn}
+              </ButtonLink>
+              <ButtonLink href="/inscription" size="sm">
+                {fr.common.signUp}
+              </ButtonLink>
+            </>
+          )}
         </div>
 
         <button
@@ -81,12 +89,20 @@ export function SiteHeader() {
               </Link>
             ))}
             <div className="mt-2 flex gap-2 px-3 pb-2">
-              <ButtonLink href="/connexion" variant="outline" size="sm" className="flex-1">
-                {fr.common.signIn}
-              </ButtonLink>
-              <ButtonLink href="/inscription" size="sm" className="flex-1">
-                {fr.common.signUp}
-              </ButtonLink>
+              {authed ? (
+                <ButtonLink href="/mon-espace" size="sm" className="flex-1">
+                  {fr.common.dashboard}
+                </ButtonLink>
+              ) : (
+                <>
+                  <ButtonLink href="/connexion" variant="outline" size="sm" className="flex-1">
+                    {fr.common.signIn}
+                  </ButtonLink>
+                  <ButtonLink href="/inscription" size="sm" className="flex-1">
+                    {fr.common.signUp}
+                  </ButtonLink>
+                </>
+              )}
             </div>
           </nav>
         </div>
