@@ -52,6 +52,29 @@ function NavLinks({
   );
 }
 
+function LogoutButton({ className }: { className?: string }) {
+  return (
+    <form action={logoutAction}>
+      <button
+        type="submit"
+        className={cn(
+          "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-ink-500 hover:bg-ink-50 hover:text-ink-900",
+          className,
+        )}
+      >
+        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path
+            d="M15 17l5-5-5-5M20 12H9M12 19H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h7"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        Déconnexion
+      </button>
+    </form>
+  );
+}
+
 export function DashboardChrome({
   user,
   children,
@@ -65,42 +88,41 @@ export function DashboardChrome({
   return (
     <div className="flex min-h-screen flex-col bg-surface">
       <header className="sticky top-0 z-40 border-b border-border bg-white">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 lg:px-6">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="grid size-9 place-items-center rounded-lg text-ink-700 hover:bg-ink-50 lg:hidden"
-              aria-label="Menu"
-            >
-              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
-              </svg>
-            </button>
-            <Logo />
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-6">
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="grid size-10 shrink-0 place-items-center rounded-lg text-ink-700 hover:bg-ink-50 lg:hidden"
+            aria-label="Menu"
+          >
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          <div className="min-w-0 flex-1">
+            <Logo tagline={false} />
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden text-right sm:block">
-              <p className="text-[11px] uppercase tracking-wide text-muted">
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="text-right leading-tight">
+              <p className="hidden text-[11px] uppercase tracking-wide text-muted sm:block">
                 Solde
               </p>
-              <p className="text-sm font-bold text-brand-700">{user.balance}</p>
+              <p className="text-xs font-bold text-brand-700 sm:text-sm">
+                {user.balance}
+              </p>
             </div>
             <Link
               href="/mon-espace/recharger"
-              className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-semibold text-white hover:bg-brand-700"
+              aria-label="Recharger mon compte"
+              className="flex h-10 items-center gap-1.5 rounded-lg bg-brand-600 px-2.5 text-xs font-semibold text-white hover:bg-brand-700 sm:px-3"
             >
-              Recharger
+              <svg viewBox="0 0 24 24" className="size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2}>
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+              </svg>
+              <span className="hidden sm:inline">Recharger</span>
             </Link>
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="rounded-lg px-2 py-2 text-xs font-medium text-ink-500 hover:bg-ink-50 hover:text-ink-900"
-              >
-                Déconnexion
-              </button>
-            </form>
           </div>
         </div>
       </header>
@@ -108,10 +130,13 @@ export function DashboardChrome({
       <div className="mx-auto flex w-full max-w-6xl flex-1 gap-6 px-4 py-6 lg:px-6">
         <aside className="hidden w-56 shrink-0 lg:block">
           <div className="rounded-2xl border border-border bg-white p-3">
-            <p className="px-3 pb-2 text-sm font-semibold text-ink-900">
+            <p className="truncate px-3 pb-2 text-sm font-semibold text-ink-900">
               {user.name}
             </p>
             <NavLinks pathname={pathname} />
+            <div className="mt-2 border-t border-border pt-2">
+              <LogoutButton />
+            </div>
           </div>
         </aside>
 
@@ -121,13 +146,13 @@ export function DashboardChrome({
               className="absolute inset-0 bg-black/40"
               onClick={() => setOpen(false)}
             />
-            <div className="absolute left-0 top-0 h-full w-72 bg-white p-4 shadow-xl">
-              <div className="mb-4 flex items-center justify-between">
-                <Logo />
+            <div className="absolute left-0 top-0 flex h-full w-72 max-w-[85vw] flex-col bg-white p-4 shadow-xl">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <Logo tagline={false} className="min-w-0" />
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="grid size-9 place-items-center rounded-lg text-ink-700 hover:bg-ink-50"
+                  className="grid size-10 shrink-0 place-items-center rounded-lg text-ink-700 hover:bg-ink-50"
                   aria-label="Fermer"
                 >
                   <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -136,6 +161,9 @@ export function DashboardChrome({
                 </button>
               </div>
               <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+              <div className="mt-auto border-t border-border pt-2">
+                <LogoutButton />
+              </div>
             </div>
           </div>
         )}
